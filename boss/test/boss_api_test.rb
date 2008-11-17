@@ -7,10 +7,10 @@ class BossApiTest < Test::Unit::TestCase
   def test_this_plugin
 
     
-    boss = BossApi.new
+    # boss = BossApi.new
     
     #usage: simple
-    # res = boss.search({:key => "dicionário"})  
+    # res = BossApi.search({:key => "dicionário"})  
 
     
     #usage site (:site)
@@ -37,9 +37,16 @@ class BossApiTest < Test::Unit::TestCase
     #usage start (:start)
     # res, header = BossApi.search({:key => "link", :site => "www.uol.com.br", :count => "10", :start => "11"})
 
+    #region and language
+    # res, header = BossApi.search({:key => "Obama", :region => "Brazil"})        
+    # res, header = BossApi.search({:key => "Obama", :region => "Argentina"})            
+
 
     #region and language
-    res, header = boss.search({:key => "Obama", :region => "Brasil"})        
+    res, header = BossApi.search({:key => "Obama", :type_search => "image"})  
+    res, header = BossApi.search({:key => "Obama", :type_search => "news"})
+    res, header = BossApi.search({:key => "Obama", :type_search => "web"})    
+    res, header = BossApi.search({:key => "Obama"})
     
     #filter
     

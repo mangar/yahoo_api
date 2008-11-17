@@ -2,9 +2,7 @@ class BossApi
 
   require 'net/http'
   require 'rexml/document'
-
-  # Your Boss AppId 
-  AppID = "HaxX0zXIkY0UnUsuwIWe83UMaSkbqbU2Y4mlSi4-"
+  require 'yaml'
 
   # Boss URL base
   BOSS_URL_WEB = "http://boss.yahooapis.com/ysearch/web/v1/"
@@ -19,15 +17,6 @@ class BossApi
   # Default Region and Language
   # Can be replaced via parameter  
   RegionLanguage_Default = "Brazil"
-
-
-  #
-  # Correios class can be initialized using a pre defined config file as parameter
-  # if no one is specified, will be used the default: /../config/correios.yml
-  #
-  def initialize
-    @config = YAML.load_file(File.dirname(__FILE__) + "./boss.yaml")
-  end
 
   # Allowed parameters:
   #
@@ -51,10 +40,12 @@ class BossApi
   #  - optional arguments: http://developer.yahoo.com/search/boss/boss_guide/News_Search.html#optional_args_news
   #
   #
-  def search(par = {})
+  def self.search(par = {})
+
+    config = YAML.load_file(File.dirname(__FILE__) + "/boss_api.yaml")
 
     #key...
-    url = "#{BOSS_URL}#{URI.escape(par[:key])}"
+    url = "#{BOSS_URL_WEB}#{URI.escape(par[:key])}"
     
     #... -
     url += URI.escape(" #{par[:-]}") if (par.key? :-)
@@ -68,9 +59,8 @@ class BossApi
     #... -site
     url += URI.escape(" -site:#{par[:_site]}") if (par.key? :_site)
 
-    
     #...appid and format
-    url += "?appid=#{AppID}"
+    url += "?appid=#{config['AppID']}"
     
     #... format
     url += "&format=#{Format_Default}"
@@ -81,36 +71,33 @@ class BossApi
     #... start ==> Ordinal position of first result. First position is 0. Default sets start to 0.
     url += URI.escape("&start=#{par[:start]}") if (par.key? :start)
 
-
-        
     #... region and language
-    url += URI.escape(@config['Argentina']) if (par.key? :region)    
+    url += URI.escape("#{config[par[:region]]}") if (par.key? :region)    
     
     
     
-    # parameters for web.................
-    # filter
-    # type
-      # You can combine inclusion, exclusion, document types, and type groups like this:
-      # type=html,msoffice,-pdf
-    
-    
-    
-    # parameters for images..............
-    # filter
-    # dimensions
-    # refererurl
-    # url
-    
-
-    # parameters for news................
-    # age
+    # parameters for web: filter, type
+    if (!(par.key? :type_search) || (par[:type_search].eql? "web")) then
+      url += "&web=web"
+    end
 
     
+    # parameters for images: filter, dimensions, refererurl, url
+    if (par[:type_search].eql? "image") then
+      url += "&image=image"
+    end
+
+    
+    # parameters for news: age
+    if (par[:type_search].eql? "news") then
+      url += "&news=news"
+    end
+
+    
 
     
     
-    # puts "URL: #{url}"
+    puts "URL: #{url}"
     data = Net::HTTP.get_response(URI.parse(url)).body
     # puts "Data: \n\n #{data}"
     
@@ -139,195 +126,6 @@ class BossApi
 
     return records, header
   end
-
-
-
-  # RegionLanguage = new Hash[]
-  # RegionLanguage[:Canada - English] = "&region=ca&lang=en"
-  # RegionLanguage[:Canada - French] = "&region=ca&lang=fr"
-  # RegionLanguage[:Catalan] = "&region=ct&lang=ca"
-  # RegionLanguage[:Chile] = "&region=cl&lang=es"
-  # RegionLanguage[:Columbia] = "&region=co&lang=es"
-  # RegionLanguage[:Denmark] = "&region=dk&lang=da"
-  # RegionLanguage[:Finland] = "&region=fi&lang=fi"
-  # RegionLanguage[:Indonesia - English] = "&region=id&lang=en"
-  # RegionLanguage[:Indonesia - Indonesian] = "&region=id&lang=id"
-  # RegionLanguage[:India] = "&region=in&lang=en"
-  # RegionLanguage[:Japan] = "&region=jp&lang=jp"
-  # RegionLanguage[:Korea] = "&region=kr&lang=kr"
-
-  # Mexico
-  # 
-  # 
-  # mx
-  # 
-  # 
-  # es
-  # 
-  # Malaysia - English
-  # 
-  # 
-  # my
-  # 
-  # 
-  # en
-  # 
-  # Malaysia
-  # 
-  # 
-  # my
-  # 
-  # 
-  # ms
-  # 
-  # Netherlands
-  # 
-  # 
-  # nl
-  # 
-  # 
-  # nl
-  # 
-  # Norway
-  # 
-  # 
-  # no
-  # 
-  # 
-  # no
-  # 
-  # New Zealand
-  # 
-  # 
-  # nz
-  # 
-  # 
-  # en
-  # Peru  pe  es
-  # 
-  # Philippines
-  # 
-  # 
-  # ph
-  # 
-  # 
-  # tl
-  # Philippines - English   ph  en
-  # 
-  # Russia
-  # 
-  # 
-  # ru
-  # 
-  # 
-  # ru
-  # 
-  # Sweden
-  # 
-  # 
-  # se
-  # 
-  # 
-  # sv
-  # 
-  # Singapore
-  # 
-  # 
-  # sg
-  # 
-  # 
-  # en
-  # 
-  # Thailand
-  # 
-  # 
-  # th
-  # 
-  # 
-  # th
-  # 
-  # Switzerland - German
-  # 
-  # 
-  # ch
-  # 
-  # 
-  # de
-  # 
-  # Switzerland - French
-  # 
-  # 
-  # ch
-  # 
-  # 
-  # fr
-  # 
-  # Switzerland - Italian
-  # 
-  # 
-  # ch
-  # 
-  # 
-  # it
-  # 
-  # German
-  # 
-  # 
-  # de
-  # 
-  # 
-  # de
-  # 
-  # Spanish
-  # 
-  # 
-  # es
-  # 
-  # 
-  # es
-  # 
-  # French
-  # 
-  # 
-  # fr
-  # 
-  # 
-  # fr
-  # 
-  # Italian
-  # 
-  # 
-  # it
-  # 
-  # 
-  # it
-  # 
-  # United Kingdom
-  # 
-  # 
-  # uk
-  # 
-  # 
-  # en
-  # 
-  # United States - English
-  # 
-  # 
-  # us
-  # 
-  # 
-  # en
-  # 
-  # United States - Spanish
-  # 
-  # 
-  # us
-  # 
-  # 
-  # es
-  # Vietnam   vn  vi
-  # Venezuela   ve  es
-
 
 
 end
