@@ -6,17 +6,13 @@ class BossApi
 
   # Boss URL base
   BOSS_URL_WEB = "http://boss.yahooapis.com/ysearch/web/v1/"
-  BOSS_URL_IMAGES = "http://boss.yahooapis.com/ysearch/images/v1/"
+  BOSS_URL_IMAGE = "http://boss.yahooapis.com/ysearch/images/v1/"
   BOSS_URL_NEWS = "http://boss.yahooapis.com/ysearch/news/v1/"
   
   
   # Default response format (xml / json)
   # Can be replaced via parameter
   Format_Default = "xml"
-
-  # Default Region and Language
-  # Can be replaced via parameter  
-  RegionLanguage_Default = "Brazil"
 
   # Allowed parameters:
   #
@@ -45,7 +41,7 @@ class BossApi
     config = YAML.load_file(File.dirname(__FILE__) + "/boss_api.yaml")
 
     #key...
-    url = "#{BOSS_URL_WEB}#{URI.escape(par[:key])}"
+    url = "#{URI.escape(par[:key])}"
     
     #... -
     url += URI.escape(" #{par[:-]}") if (par.key? :-)
@@ -78,26 +74,43 @@ class BossApi
     
     # parameters for web: filter, type
     if (!(par.key? :type_search) || (par[:type_search].eql? "web")) then
-      url += "&web=web"
-    end
-
+      
+      url = "#{BOSS_URL_WEB}#{url}"
+      
+      #... filter
+      url += URI.escape("&filter=#{par[:filter]}") if (par.key? :filter)
+      
+      #... type
+      url += URI.escape("&type=#{par[:type]}") if (par.key? :type)      
     
     # parameters for images: filter, dimensions, refererurl, url
-    if (par[:type_search].eql? "image") then
-      url += "&image=image"
-    end
+    elsif (par[:type_search].eql? "image") then
+      
+      url = "#{BOSS_URL_IMAGE}#{url}"
+      
+      #... filter
+      url += URI.escape("&filter=#{par[:filter]}") if (par.key? :filter)      
 
-    
+      #... dimensions
+      url += URI.escape("&dimensions=#{par[:dimensions]}") if (par.key? :dimensions)
+      
+      #... refererurl
+      url += URI.escape("&refererurl=#{par[:refererurl]}") if (par.key? :refererurl)
+      
+      #... url
+      url += URI.escape("&url=#{par[:url]}") if (par.key? :url)
+                            
     # parameters for news: age
-    if (par[:type_search].eql? "news") then
-      url += "&news=news"
+    elsif (par[:type_search].eql? "news") then
+      
+      url = "#{BOSS_URL_NEWS}#{url}"
+      
+      #... age
+      url += URI.escape("&age=#{par[:age]}") if (par.key? :age)
+      
     end
 
-    
-
-    
-    
-    puts "URL: #{url}"
+    # puts "URL: #{url}"
     data = Net::HTTP.get_response(URI.parse(url)).body
     # puts "Data: \n\n #{data}"
     
@@ -109,10 +122,27 @@ class BossApi
     header[:responsecode] = doc.root.attributes["responsecode"]
     header[:prevpage] = doc.root.elements["prevpage"].text if (doc.root.elements["prevpage"] != nil)
     header[:nextpage] = doc.root.elements["nextpage"].text if (doc.root.elements["nextpage"] != nil)
-    header[:count] = doc.root.elements["resultset_web"].attributes["count"]
-    header[:start] =  doc.root.elements["resultset_web"].attributes["start"]
-    header[:totalhits] =  doc.root.elements["resultset_web"].attributes["totalhits"]
-    header[:deephits] =  doc.root.elements["resultset_web"].attributes["deephits"]
+    
+    
+    if (!(par.key? :type_search) || (par[:type_search].eql? "web")) then
+      header[:count] = doc.root.elements["resultset_web"].attributes["count"]
+      header[:start] =  doc.root.elements["resultset_web"].attributes["start"]
+      header[:totalhits] =  doc.root.elements["resultset_web"].attributes["totalhits"]
+      header[:deephits] =  doc.root.elements["resultset_web"].attributes["deephits"]
+      
+    elsif (par[:type_search].eql? "image") then
+      header[:count] = doc.root.elements["resultset_images"].attributes["count"]
+      header[:start] =  doc.root.elements["resultset_images"].attributes["start"]
+      header[:totalhits] =  doc.root.elements["resultset_images"].attributes["totalhits"]
+      header[:deephits] =  doc.root.elements["resultset_images"].attributes["deephits"]      
+      
+    elsif (par[:type_search].eql? "news") then
+      header[:count] = doc.root.elements["resultset_news"].attributes["count"]
+      header[:start] =  doc.root.elements["resultset_news"].attributes["start"]
+      header[:totalhits] =  doc.root.elements["resultset_news"].attributes["totalhits"]
+      header[:deephits] =  doc.root.elements["resultset_news"].attributes["deephits"]
+      
+    end
 
     # data...
     records = Array.new
