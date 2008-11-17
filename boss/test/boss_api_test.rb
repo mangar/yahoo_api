@@ -2,6 +2,7 @@ require 'test/unit'
 
 require '../lib/boss_api'
 
+
 class BossApiTest < Test::Unit::TestCase
   
   def test_url
